@@ -33,7 +33,7 @@ jobs:
         run: poetry install --with dev
       - name: Run Lint
         run:  |
-          poetry run mypy ./
+          poetry run mypy simple_orm
       - name: Run Tests
         run:  |
           poetry run pytest -v
