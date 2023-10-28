@@ -53,13 +53,13 @@ def _join_type_handler(join_type:Union[JoinType, List[JoinType]]) -> str:
     if isinstance(join_type, str):
         if isinstance(join_type, str):
             if join_type in JOIN_TYPES:
-                return join_type
+                return join_type.upper()
 
         raise JoinTypeError(join_type)
     else:
         if 'cross' in join_type:
             # NOTE Cross join overlapping all other types
-            return 'cross'
+            return 'CROSS'
         else:
             inner = 'inner' in  join_type
             outer = 'outer' in join_type
@@ -70,7 +70,7 @@ def _join_type_handler(join_type:Union[JoinType, List[JoinType]]) -> str:
                 raise JoinTypeError("JoinType conflict!")
             elif not any([left, right, inner, outer]):
                 # default
-                return 'inner'
+                return 'INNER'
             else:
                 result = ' left' if left else ''
                 result += ' right' if right else ''
