@@ -1,5 +1,5 @@
 from operator import attrgetter
-from typing import Any, Iterable, List, Tuple, Union, Callable, Literal, Type
+from typing import Any, Callable, Iterable, List, Literal, Optional, Tuple, Type, Union
 
 from simple_orm.bases import M, ModelBase
 from simple_orm.utils import camel_to_snake
@@ -68,15 +68,15 @@ def _join_type_handler(join_type:Union[JoinType, List[JoinType]]) -> str:
 
             if (left and right) or (inner and outer):
                 raise JoinTypeError("JoinType conflict!")
-            elif not any(left, right, inner, outer):
+            elif not any([left, right, inner, outer]):
                 # default
                 return 'inner'
             else:
                 result = ' left' if left else ''
                 result += ' right' if right else ''
-                result += 'inner' if inner else ''
-                result += 'outer' if outer else ''
-                return result
+                result += ' inner' if inner else ''
+                result += ' outer' if outer else ''
+                return result.upper()
 
 
 class QueryBuilder:
@@ -98,7 +98,7 @@ class QueryBuilder:
 
         return template.format(table_name=table_name,
                             fields=', '.join(list(map(str, fields))),
-                            values=', '.join(['?' for _ in range(len(fields))]))
+                            values=', '.join(['?' for _ in fields]))
 
 
     @staticmethod
@@ -124,9 +124,9 @@ class QueryBuilder:
     def join(left_table:str,
              right_table:str,
              join_type:Union[JoinType, List[JoinType]]='inner',
-             left_alias:str=None,
-             right_alias:str=None,
-             **conditions) -> Tuple[str, Tuple[str, str]]:
+             left_alias:Optional[str]=None,
+             right_alias:Optional[str]=None,
+             **conditions) -> str:
         """
             Return format (join_template, (left_alias, right_alias))
         """
@@ -149,7 +149,7 @@ class QueryBuilder:
 
         # result
         query = template.format(left_table=left_table,
-                                join_type=_join_type_handler(join_type).upper(),
+                                join_type=_join_type_handler(join_type),
                                 right_table=right_table,
                                 conditions=', '.join(
                                     list(
@@ -159,15 +159,16 @@ class QueryBuilder:
         return query
 
 
-class ModelQueryBuilder(QueryBuilder):
+class ModelQueryBuilder:
     @staticmethod
     def select(model:Type[M], **conditions) -> str:
         sourse = camel_to_snake(model.__name__)
         fields = model.__match_args__
 
         # NOTE unbound super
-        return super(ModelQueryBuilder, ModelQueryBuilder).\
-            select(sourse=sourse, fields=fields, **conditions)
+        return QueryBuilder.select(sourse=sourse,
+                                   fields=fields,
+                                   **conditions)
 
 
     @staticmethod
@@ -186,8 +187,8 @@ class ModelQueryBuilder(QueryBuilder):
             values.append(value)
 
         queries.append(
-            super(ModelQueryBuilder, ModelQueryBuilder).\
-                insert(table_name=table_name, fields=fields, values=tuple(values)))
+            QueryBuilder.insert(table_name=table_name,
+                                fields=fields))
         return queries
 
 
@@ -214,8 +215,10 @@ class ModelQueryBuilder(QueryBuilder):
             values.append(value)
 
         queries.append(
-            super(ModelQueryBuilder, ModelQueryBuilder).\
-                update(table_name=table_name, fields=fields, values=values, **conditions)
+            QueryBuilder.update(table_name=table_name,
+                                fields=fields,
+                                values=values,
+                                **conditions)
         )
         return queries
 
@@ -224,5 +227,4 @@ class ModelQueryBuilder(QueryBuilder):
     def delete(model:Type[M], **conditions) -> List[str]:
         table_name = camel_to_snake(model.__class__.__name__)
 
-        return super(ModelQueryBuilder, ModelQueryBuilder).\
-            delete(table_name=table_name, **conditions)
+        return QueryBuilder.delete(table_name=table_name, **conditions)

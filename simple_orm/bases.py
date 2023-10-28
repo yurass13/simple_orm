@@ -11,7 +11,7 @@ class ForeignKey(Generic[M]):
         self._related_model = model
 
     def __repr__(self) -> str:
-        return self._related_model.id
+        return str(self._related_model.id)
 
 
 @dataclass
