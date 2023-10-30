@@ -21,7 +21,7 @@ def _where_decorator(query_builder_method:Callable) -> Callable:
 
     # TODO need check better ways init wrapper signature using reflection
     def wrapper(*args, **kwargs):
-        template = "{query} WHERE {conditions};"
+        template = "{query} WHERE {conditions}"
 
         params_dict = {}
         conditions = []
@@ -79,6 +79,13 @@ def _join_type_handler(join_type:Union[JoinType, List[JoinType]]) -> str:
                 return result.upper()
 
 
+def _end_of_script_decorator(query_builder_method:Callable) -> Callable:
+    def wrapper(*args, **kwargs):
+        return f"{query_builder_method(*args, **kwargs)};"
+
+    return wrapper
+
+
 class QueryBuilder:
     @staticmethod
     @_where_decorator
@@ -93,8 +100,9 @@ class QueryBuilder:
 
 
     @staticmethod
+    @_end_of_script_decorator
     def insert(table_name:str, fields:Iterable[str]) -> str:
-        template = "INSERT INTO {table_name} ({fields}) VALUES ({values});"
+        template = "INSERT INTO {table_name} ({fields}) VALUES ({values})"
 
         return template.format(table_name=table_name,
                             fields=', '.join(list(map(str, fields))),
@@ -102,9 +110,9 @@ class QueryBuilder:
 
 
     @staticmethod
+    @_end_of_script_decorator
     @_where_decorator
-    def update(table_name:str,
-               fields:Iterable[str]) -> str:
+    def update(table_name:str, fields:Iterable[str]) -> str:
         template = "UPDATE {table_name} SET {pairs}"
 
         return template.format(table_name=table_name,
@@ -112,6 +120,7 @@ class QueryBuilder:
 
 
     @staticmethod
+    @_end_of_script_decorator
     @_where_decorator
     def delete(table_name:str) -> str:
         # NOTE be careful. Need Decorator QueryConstructorBase.where(**kwargs)
@@ -159,12 +168,13 @@ class QueryBuilder:
         return query
 
 
-class ModelQueryBuilder:
+class QueryBuilderModel:
     @staticmethod
     def select(model:Type[M], **conditions) -> str:
         sourse = camel_to_snake(model.__name__)
         fields = model.__match_args__
 
+        # TODO join on model.field is model
         # NOTE unbound super
         return QueryBuilder.select(sourse=sourse,
                                    fields=fields,
@@ -182,7 +192,7 @@ class ModelQueryBuilder:
             value = attrgetter(field)(model)
 
             if isinstance(value, ModelBase):
-                queries.extend(ModelQueryBuilder.insert(value))
+                queries.extend(QueryBuilderModel.insert(value))
                 value = value.id
             values.append(value)
 
@@ -210,7 +220,7 @@ class ModelQueryBuilder:
                 if 'id' not in local_conditions:
                     local_conditions['id'] = value.id
                 
-                queries.extend(ModelQueryBuilder.update(value, **local_conditions))
+                queries.extend(QueryBuilderModel.update(value, **local_conditions))
                 value = value.id
             values.append(value)
 
