@@ -2,7 +2,7 @@ from operator import attrgetter
 from typing import Any, Callable, Iterable, List, Literal, Optional, Tuple, Type, Union
 
 from simple_orm.bases import M, ModelBase
-from simple_orm.utils import camel_to_snake
+from simple_orm.utils import camel_to_snake, find_eq_method
 
 
 JOIN_TYPES = ['left', 'right', 'inner', 'outer', 'cross']
@@ -30,11 +30,7 @@ def _where_decorator(query_builder_method:Callable) -> Callable:
             if key in method_params:
                 params_dict[key]= value
             else:
-                prepared_key = key.replace('__lt', '<').\
-                                   replace('__gt', '>').\
-                                   replace('__le', '<=').\
-                                   replace('__ge', '>=').\
-                                   replace('__','.')
+                prepared_key = find_eq_method(key)
                 conditions.append(f"{prepared_key}?" 
                                   if '<' in prepared_key or '>' in prepared_key 
                                   else f"{prepared_key}=?")
@@ -51,15 +47,15 @@ def _where_decorator(query_builder_method:Callable) -> Callable:
 
 def _join_type_handler(join_type:Union[JoinType, List[JoinType]]) -> str:
     if isinstance(join_type, str):
-        if isinstance(join_type, str):
-            if join_type in JOIN_TYPES:
-                return join_type.upper()
+        if join_type not in JOIN_TYPES:
+            raise JoinTypeError(join_type)
+        else:
+            result:str = join_type
 
-        raise JoinTypeError(join_type)
-    else:
+    elif isinstance(join_type, (list, tuple)):
         if 'cross' in join_type:
             # NOTE Cross join overlapping all other types
-            return 'CROSS'
+            result = 'cross'
         else:
             inner = 'inner' in  join_type
             outer = 'outer' in join_type
@@ -70,13 +66,14 @@ def _join_type_handler(join_type:Union[JoinType, List[JoinType]]) -> str:
                 raise JoinTypeError("JoinType conflict!")
             elif not any([left, right, inner, outer]):
                 # default
-                return 'INNER'
+                result = 'inner'
             else:
                 result = ' left' if left else ''
                 result += ' right' if right else ''
                 result += ' inner' if inner else ''
                 result += ' outer' if outer else ''
-                return result.upper()
+
+    return result.upper()
 
 
 def _end_of_script_decorator(query_builder_method:Callable) -> Callable:
@@ -167,7 +164,7 @@ class QueryBuilder:
 
         return query
 
-
+# TODO need tests
 class QueryBuilderModel:
     @staticmethod
     def select(model:Type[M], **conditions) -> str:
