@@ -1,7 +1,7 @@
 from operator import attrgetter
 from typing import Any, Callable, Iterable, List, Literal, Optional, Tuple, Type, Union
 
-from simple_orm.bases import M, ModelBase
+from simple_orm.models import M, ModelBase
 from simple_orm.utils import camel_to_snake, apply_eq_method
 
 
