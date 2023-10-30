@@ -17,14 +17,18 @@ def snake_to_camel(name:str) -> str:
 def apply_eq_method(string:str) -> str:
     """NOTE include python path: '__'->'.'"""
     # TODO add other methods
+    eq_methods = {
+        '__lt': '<',
+        '__gt': '>',
+        '__le': '<=',
+        '__ge': '>=',
+        '__in': ' in ',
+    }
+    for method in eq_methods:
+        if string.endswith(method):
+            string = string[:-len(method)] + eq_methods[method]
 
-    return double_underscore_to_dot(
-        string.replace('__lt', '<').\
-               replace('__gt', '>').\
-               replace('__le', '<=').\
-               replace('__ge', '>=').\
-               replace('__in', ' in ')
-    )
+    return double_underscore_to_dot(string)
 
 
 def double_underscore_to_dot(string:str) -> str:
