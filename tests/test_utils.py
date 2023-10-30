@@ -12,10 +12,20 @@ def test_camel_to_snake():
         assert value == camel_to_snake(key)
 
 
+def test_snake_to_camel_error():
+    try:
+        result = snake_to_camel('text with whitespaces')
+    except ValueError as error:
+        result = str(error)
+
+    finally:
+        assert result == "The string contains a whitespace character!"
+
+
 def test_snake_to_camel():
     cases = {
-        'just text':'just text',
-        'snake_method':'SnakeMethod',
+        'textwithoutwhitespaces':'Textwithoutwhitespaces',
+        'snake_method': 'SnakeMethod',
     }
 
     for key, value in cases.items():

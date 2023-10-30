@@ -7,6 +7,10 @@ def camel_to_snake(name:str) -> str:
 
 
 def snake_to_camel(name:str) -> str:
+    name = name.strip()
+    if ' ' in name or '\t' in name or '\n' in name:
+        raise ValueError('The string contains a whitespace character!')
+
     return ''.join(word.title() for word in name.split('_'))
 
 
