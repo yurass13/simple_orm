@@ -10,9 +10,11 @@ def snake_to_camel(name:str) -> str:
     return ''.join(word.title() for word in name.split('_'))
 
 
-def find_eq_method(string:str) -> str:
-    # TODO contains? x in key
-    return _snake_to_python_path(
+def apply_eq_method(string:str) -> str:
+    """NOTE include python path: '__'->'.'"""
+    # TODO add other methods
+
+    return double_underscore_to_dot(
         string.replace('__lt', '<').\
                replace('__gt', '>').\
                replace('__le', '<=').\
@@ -21,6 +23,6 @@ def find_eq_method(string:str) -> str:
     )
 
 
-def _snake_to_python_path(string:str) -> str:
+def double_underscore_to_dot(string:str) -> str:
     return string.replace('__', '.')
 

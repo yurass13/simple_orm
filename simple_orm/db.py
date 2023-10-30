@@ -2,7 +2,7 @@ from operator import attrgetter
 from typing import Any, Callable, Iterable, List, Literal, Optional, Tuple, Type, Union
 
 from simple_orm.bases import M, ModelBase
-from simple_orm.utils import camel_to_snake, find_eq_method
+from simple_orm.utils import camel_to_snake, apply_eq_method
 
 
 JOIN_TYPES = ['left', 'right', 'inner', 'outer', 'cross']
@@ -30,7 +30,7 @@ def _where_decorator(query_builder_method:Callable) -> Callable:
             if key in method_params:
                 params_dict[key]= value
             else:
-                prepared_key = find_eq_method(key)
+                prepared_key = apply_eq_method(key)
                 conditions.append(f"{prepared_key}?" 
                                   if '<' in prepared_key or '>' in prepared_key 
                                   else f"{prepared_key}=?")
