@@ -6,10 +6,10 @@ authors = ["Yury Stolpov <yurass130@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-mypy = "^1.6.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.4"
+mypy = "^1.6.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

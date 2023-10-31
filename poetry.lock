@@ -29,7 +29,7 @@ python-versions = ">=3.7"
 name = "mypy"
 version = "1.6.1"
 description = "Optional static typing for Python"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.8"
 
@@ -47,7 +47,7 @@ reports = ["lxml"]
 name = "mypy-extensions"
 version = "1.0.0"
 description = "Type system extensions for programs checked with the mypy type checker."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.5"
 
@@ -94,7 +94,7 @@ testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "no
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.7"
 
@@ -102,14 +102,14 @@ python-versions = ">=3.7"
 name = "typing-extensions"
 version = "4.8.0"
 description = "Backported and Experimental Type Hints for Python 3.8+"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.8"
 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "2cf29f3cb7ee971bd579f32fbe67d0dc6b6d7466d8c63740c1bf12d0364e24b6"
+content-hash = "73c9a0dd192c93c7378368d89afa3a1fb25c684bf1fd6f3c42e00072e0639ae1"
 
 [metadata.files]
 colorama = []
