@@ -1,7 +1,7 @@
 from operator import attrgetter
 from typing import Any, Callable, Iterable, List, Literal, Optional, Tuple, Type, Union
 
-from simple_orm.models import M, ModelBase
+from simple_orm.models import M, Model
 from simple_orm.utils import camel_to_snake, apply_eq_method
 
 
@@ -16,6 +16,7 @@ class JoinTypeError(Exception):
     pass
 
 
+# TODO add logic between where conditions. IMPORTANT
 def _where_decorator(query_builder_method:Callable) -> Callable:
     method_params = query_builder_method.__code__.co_varnames
 
@@ -45,6 +46,9 @@ def _where_decorator(query_builder_method:Callable) -> Callable:
     return wrapper
 
 
+# TODO tests for all types of join.         IMPORTANT
+# TODO chain joins.                         IMPORTANT
+# TODO add logic between join conditions.   FUTURE IDEA
 def _join_type_handler(join_type:Union[JoinType, List[JoinType]]) -> str:
     if isinstance(join_type, str):
         if join_type not in JOIN_TYPES:
@@ -82,7 +86,12 @@ def _end_of_script_decorator(query_builder_method:Callable) -> Callable:
 
     return wrapper
 
-
+# TODO CREATE table.                        IMPORTANT
+# TODO SELECT DISTINCT.                     FUTURE IDEA
+# TODO SELECT TOP N .                       FUTURE IDEA
+# TODO ORDER BY.                            FUTURE IDEA
+# TODO GROUP BY.                            FUTURE IDEA
+# TODO Other patterns.                      FUTURE IDEA
 class QueryBuilder:
     @staticmethod
     @_where_decorator
@@ -164,14 +173,25 @@ class QueryBuilder:
 
         return query
 
-# TODO need tests
+# TODO need check duplicate queries in insert, update, delete       IMPORTANT
+# NOTE insert, update and delete must returns Queue or ect. with unique sorted queries. 
+""" NOTE queries DFS walk generator
+1. Save lists of queries and find lists with the same items.
+2. Union lists with priority of the first list.
+3. On duplicated item switch on second or other list and continue.
+4. After all left side from lists with same objects are handled return to the first list.
+NOTE Be careful with cycles.
+"""
+# TODO Update table SET choosed_field['s]=?[ WHERE **conditions];   FUTURE IDEA.
+# TODO update using Type[M] for all values update                   AFTER CREATE TABLE AND ALTER TABLE
+# TODO Delete relations options                                     FUTURE IDEA.
 class QueryBuilderModel:
     @staticmethod
     def select(model:Type[M], **conditions) -> str:
         sourse = camel_to_snake(model.__name__)
         fields = model.__match_args__
 
-        # TODO join on model.field is model
+        # TODO joins on relations.                                  IMPORTANT
         # NOTE unbound super
         return QueryBuilder.select(sourse=sourse,
                                    fields=fields,
@@ -184,14 +204,12 @@ class QueryBuilderModel:
         table_name = camel_to_snake(model.__class__.__name__)
         fields = model.__match_args__
 
-        values = []
         for field in fields:
             value = attrgetter(field)(model)
 
-            if isinstance(value, ModelBase):
+            if isinstance(value, Model):
                 queries.extend(QueryBuilderModel.insert(value))
                 value = value.id
-            values.append(value)
 
         queries.append(
             QueryBuilder.insert(table_name=table_name,
@@ -205,11 +223,10 @@ class QueryBuilderModel:
         table_name = camel_to_snake(model.__class__.__name__)
         fields = model.__match_args__
 
-        values = []
         for field in fields:
             value = attrgetter(field)(model)
 
-            if isinstance(value, ModelBase):
+            if isinstance(value, Model):
                 local_conditions = {key.removeprefix(table_name + '.'): conditions[key] 
                                     for key in conditions
                                     if key.startswith(table_name + '.')}
@@ -218,13 +235,10 @@ class QueryBuilderModel:
                     local_conditions['id'] = value.id
                 
                 queries.extend(QueryBuilderModel.update(value, **local_conditions))
-                value = value.id
-            values.append(value)
 
         queries.append(
             QueryBuilder.update(table_name=table_name,
                                 fields=fields,
-                                values=values,
                                 **conditions)
         )
         return queries
@@ -233,5 +247,4 @@ class QueryBuilderModel:
     @staticmethod
     def delete(model:Type[M], **conditions) -> List[str]:
         table_name = camel_to_snake(model.__class__.__name__)
-
-        return QueryBuilder.delete(table_name=table_name, **conditions)
+        return [QueryBuilder.delete(table_name=table_name, **conditions)]
